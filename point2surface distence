@@ -1,0 +1,83 @@
+% 分割逼近求点到曲面的距离
+% 返回误差值，测点坐标，参数值
+function [wch,cc,a]=Segmentation_approach(cd)
+digits(15);
+u=linspace(0,1,5);
+v=linspace(0,1,5);
+% 第一次分割，然后按正方形分割
+    for ku=1:length(u)
+        for kv=1:length(v)
+            % 生成理论点
+            Q1{ku,kv}=surfacepoint(u(ku),v(kv));
+            % 生成元素为该次循环所用
+            Q=Q1{ku,kv};
+            dis1=Q-cd;
+            dis(ku,kv)=norm(dis1);
+         end
+    end
+%找到最近点的位置
+[x,y] = find(dis==min(min(dis)));
+% 找到对应网格并继续分割逼近
+    if (x==1)                                                                      
+        u=linspace(u(x),u(x+1),5);
+    elseif x==length(u)
+        u=linspace(u(x-1),u(x),5);
+    else
+        u=linspace(u(x-1),u(x+1),5);
+    end
+    if(y==1)
+        v=linspace(v(y),v(y+1),5);
+    elseif y==length(v)
+         v=linspace(v(y-1),v(y),5);
+    else
+        v=linspace(v(y-1),v(y+1),5);
+    end
+ e=1;
+
+while e>10^(-6) %规定误差值
+    for hu=1:5
+        for hv=1:5
+            hQ1{hu,hv}=surfacepoint(u(hu),v(hv));
+            hQ=hQ1{hu,hv};
+            hdis1=hQ-cd;
+            hdis(hu,hv)=norm(hdis1);    
+        end
+    end
+[x,y] = find(hdis==min(min(hdis)));
+% 理论点所在位置
+a=[u(x),v(y)];
+% 理论点坐标  
+cc=hQ1{x,y};
+% 最小距离
+wch=hdis(x,y);
+    if (x==1)                                                                      
+        u=linspace(u(x),u(x+1),5);
+        e1=(u(x+1)-u(x))/4;
+    elseif x==5
+        u=linspace(u(x-1),u(x),5);
+        e1=(u(x)-u(x-1))/4;
+    else
+        u=linspace(u(x-1),u(x+1),5);
+        e1=(u(x+1)-u(x-1))/4;
+    end
+    if(y==1)
+        v=linspace(v(y),v(y+1),5);
+        e2=(v(y+1)-v(y))/4;
+    elseif y==5
+         v=linspace(v(y-1),v(y),5);
+         e2=(v(y)-v(y-1))/4;
+    else
+        v=linspace(v(y-1),v(y+1),5);
+        e2=(v(y+1)-v(y-1))/4;
+    end
+   e=max(e1,e2);
+end
+% 法向量
+fxl=qiufxl(a);
+% 判断方向
+direc=cd-cc;
+dd=dot(direc,fxl);
+if dd<0
+    wch=-wch;
+end
+ end
